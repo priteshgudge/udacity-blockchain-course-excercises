@@ -69,14 +69,49 @@ contract LemonadeStand{
     }
     
     //Add Item function
-    function addItem(string _name, uint128 _price){
+    function addItem(string _name, uint128 _price)onlyOwner public{
         skuCount = skuCount + 1;
         
         emit ForSale(skuCount);
         
         //Add New Item to inventory and mark it for Sale
-        items[skuCount] = Item{name: _name, price: _price, state: State.ForSale, seller: msg.sender, buyer: 0};
+        items[skuCount] = Item({name: _name, sku: skuCount,  price: _price, state: State.ForSale, seller: msg.sender, buyer: 0});
     }
     
     // Buy Item
+    function buyItem(uint256 _itemSKU, uint128 _amount) forSale(_itemSKU)  paidEnough(items[_itemSKU].price) public payable {
+       
+       address buyer = msg.sender;
+       uint128 price = items[_itemSKU].price;
+       
+       items[_itemSKU].state = State.Sold;
+       items[_itemSKU].buyer = msg.sender;
+       
+       items[_itemSKU].seller.transfer(price);
+       
+       emit Sold(_itemSKU);
+        
+    }
+    
+    // Fetch items
+    
+    function fetchItem(uint256 _itemSKU)sold(_itemSKU) verifyCaller(items[_itemSKU].buyer) public view returns 
+    (string name, uint256 sku, uint128 price, string stateStr, address seller, address buyer){
+        Item item = items[_itemSKU];
+        
+        State state;
+        name = item.name;
+        sku = item.sku;
+        price = item.price;
+        state = item.state;
+        seller = item.seller;
+        buyer = item.buyer;
+        
+        if (state == State.ForSale){
+            stateStr = "For Sale";
+        }else{
+            stateStr = "Sold";
+        }
+        
+    }
 }

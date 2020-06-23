@@ -69,6 +69,15 @@ contract LemonadeStand{
         _ ;
     }
     
+    // Check and Refund Value greater than price
+    modifier checkValue(uint _sku) {
+        _;
+        uint128 _price = items[_sku].price;
+        uint128 amountToRefund = uint128(msg.value) - _price;
+        items[_sku].buyer.transfer(amountToRefund);
+}
+
+    
     // Constructor of contract
     constructor() public{
         owner = msg.sender;
@@ -86,7 +95,7 @@ contract LemonadeStand{
     }
     
     // Buy Item
-    function buyItem(uint256 _itemSKU) forSale(_itemSKU)  paidEnough(items[_itemSKU].price) public payable {
+    function buyItem(uint256 _itemSKU) forSale(_itemSKU)  paidEnough(items[_itemSKU].price) checkValue(_itemSKU) public payable {
        
        uint128 price = items[_itemSKU].price;
        
@@ -94,6 +103,7 @@ contract LemonadeStand{
        items[_itemSKU].buyer = msg.sender;
        
        items[_itemSKU].seller.transfer(price);
+       
        
        emit Sold(_itemSKU);
         

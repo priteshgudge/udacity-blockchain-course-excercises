@@ -11,7 +11,7 @@ contract LemonadeStand{
     uint256 skuCount;
     
     //Enum State with value (For Sale & Sold)
-    enum State { ForSale, Sold }
+    enum State { ForSale, Sold, Shipped }
     
     //Struct Item
     struct Item{
@@ -30,6 +30,7 @@ contract LemonadeStand{
     //Events
     event ForSale(uint256 skuCount);
     event Sold(uint256 sku);
+    event Shipped(uint256 sku);
     
     // Deine an only owner verificyaction
     
@@ -62,6 +63,12 @@ contract LemonadeStand{
         _ ;
     }
     
+        //modifier check Shipped State
+    modifier shipped(uint256 _sku){
+        require(items[_sku].state == State.Shipped);
+        _ ;
+    }
+    
     // Constructor of contract
     constructor() public{
         owner = msg.sender;
@@ -79,9 +86,8 @@ contract LemonadeStand{
     }
     
     // Buy Item
-    function buyItem(uint256 _itemSKU, uint128 _amount) forSale(_itemSKU)  paidEnough(items[_itemSKU].price) public payable {
+    function buyItem(uint256 _itemSKU) forSale(_itemSKU)  paidEnough(items[_itemSKU].price) public payable {
        
-       address buyer = msg.sender;
        uint128 price = items[_itemSKU].price;
        
        items[_itemSKU].state = State.Sold;
@@ -95,9 +101,9 @@ contract LemonadeStand{
     
     // Fetch items
     
-    function fetchItem(uint256 _itemSKU)sold(_itemSKU) verifyCaller(items[_itemSKU].buyer) public view returns 
+    function fetchItem(uint256 _itemSKU)shipped(_itemSKU) verifyCaller(items[_itemSKU].buyer) public view returns 
     (string name, uint256 sku, uint128 price, string stateStr, address seller, address buyer){
-        Item item = items[_itemSKU];
+        Item memory item = items[_itemSKU];
         
         State state;
         name = item.name;
@@ -112,6 +118,15 @@ contract LemonadeStand{
         }else{
             stateStr = "Sold";
         }
+        
+    }
+    
+    //Ship Item After Sale
+    function shipItem(uint256 _itemSKU) verifyCaller(items[_itemSKU].seller) sold(_itemSKU) public{
+        
+        items[_itemSKU].state = State.Shipped;
+        
+        emit Shipped(_itemSKU);
         
     }
 }
